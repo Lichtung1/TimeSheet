@@ -1,6 +1,6 @@
 // --- CONFIGURATION ---
 let entries = [];
-let projects = []; // Stores list of active projects
+let projects = [];
 const tokenKey = 'gh_token';
 const gistKey = 'gh_gist_id';
 
@@ -30,32 +30,35 @@ function toggleProjects() {
 function renderProjectSelect() {
     const select = document.getElementById('project');
     const listDisplay = document.getElementById('project-list-display');
-    
-    // Save current selection if possible
     const currentVal = select.value;
 
     select.innerHTML = '';
     listDisplay.innerHTML = '';
 
+    // 1. Add Default "ALL" Option
+    const allOpt = document.createElement('option');
+    allOpt.value = "ALL";
+    allOpt.innerText = "[ ALL PROJECTS ]";
+    select.appendChild(allOpt);
+
     projects.forEach(p => {
-        // 1. Populate Dropdown
+        // Dropdown
         const option = document.createElement('option');
         option.value = p;
         option.innerText = p;
         select.appendChild(option);
 
-        // 2. Populate Manager List
+        // Manager List
         const li = document.createElement('li');
-        li.innerHTML = `
-            <span>${p}</span> 
-            <button class="btn-del" onclick="removeProject('${p}')">X</button>
-        `;
+        li.innerHTML = `<span>${p}</span> <button class="btn-del" onclick="removeProject('${p}')">X</button>`;
         listDisplay.appendChild(li);
     });
 
-    // Restore selection or default to first
-    if(projects.includes(currentVal)) {
+    // Attempt to restore selection
+    if(projects.includes(currentVal) || currentVal === "ALL") {
         select.value = currentVal;
+    } else {
+        select.value = "ALL";
     }
 }
 
@@ -66,17 +69,55 @@ async function addProject() {
         projects.push(name);
         input.value = '';
         renderProjectSelect();
-        await saveData(); // Save immediately
+        await saveData();
     }
 }
 
 async function removeProject(name) {
-    if(confirm(`Remove "${name}" from list? (Logs will stay)`)) {
+    if(confirm(`Remove "${name}"? Logs stay.`)) {
         projects = projects.filter(p => p !== name);
         renderProjectSelect();
         await saveData();
     }
 }
+
+// --- EXPORT CSV LOGIC (NEW) ---
+function exportCSV() {
+    // 1. Get currently visible entries (filtered)
+    // We re-use logic from renderTable, basically.
+    const filter = document.getElementById('project').value;
+    let dataToExport = entries;
+
+    if (filter !== "ALL") {
+        dataToExport = entries.filter(e => e.project === filter);
+    }
+
+    if(dataToExport.length === 0) {
+        alert("No data to export!");
+        return;
+    }
+
+    // 2. Build CSV Content
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Date,Project,Hours,Notes\n"; // Header
+
+    dataToExport.forEach(e => {
+        // Sanitize notes: remove commas and newlines so they don't break CSV format
+        const cleanNotes = (e.notes || "").replace(/,/g, " ").replace(/\n/g, " ");
+        csvContent += `${e.date},${e.project},${e.hours},${cleanNotes}\n`;
+    });
+
+    // 3. Trigger Download
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    const filename = filter === "ALL" ? "timesheet_full.csv" : `timesheet_${filter.replace(/\s/g,'_')}.csv`;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
 
 // --- CORE FUNCTIONS ---
 
@@ -91,22 +132,19 @@ async function fetchData() {
         });
         const data = await res.json();
         
-        // 1. Parse Logs
         const logContent = data.files['data.json'] ? data.files['data.json'].content : "[]";
         entries = JSON.parse(logContent || "[]");
 
-        // 2. Parse Projects (OR Auto-discover from logs if missing)
         if(data.files['projects.json']) {
             projects = JSON.parse(data.files['projects.json'].content);
         } else {
-            // Auto-discovery: Find all unique project names from history
             const unique = new Set(entries.map(e => e.project));
             if(unique.size === 0) unique.add("Main Job");
             projects = Array.from(unique);
         }
 
-        renderTable();
-        renderProjectSelect();
+        renderProjectSelect(); // Fill dropdown
+        renderTable();         // Fill table (respects "ALL" default)
 
     } catch (err) {
         console.error(err);
@@ -118,7 +156,6 @@ async function saveData() {
     const token = localStorage.getItem(tokenKey);
     const gistId = localStorage.getItem(gistKey);
     
-    // We send BOTH files to the Gist
     const body = {
         files: { 
             "data.json": { content: JSON.stringify(entries, null, 2) },
@@ -141,9 +178,66 @@ async function saveData() {
     }
 }
 
-// --- REMAINING LOGIC (Timer, Render, Add Entry) ---
-// (This is mostly unchanged, but included for completeness)
+async function addEntry() {
+    const date = document.getElementById('date').value;
+    const projectSelect = document.getElementById('project');
+    const project = projectSelect.value;
+    const hours = parseFloat(document.getElementById('hours').value);
+    const notes = document.getElementById('notes').value;
 
+    if(project === "ALL") {
+        alert("Please select a specific Project to log time.");
+        return;
+    }
+
+    if (!date || !hours) return;
+    
+    // We add to local state immediately for speed
+    const entry = { id: Date.now(), date, project, hours, notes };
+    entries.unshift(entry);
+    
+    // Render immediately (so you see it)
+    renderTable(); 
+    
+    // Then sync to cloud
+    await saveData();
+    
+    document.getElementById('hours').value = '';
+    document.getElementById('notes').value = '';
+    document.getElementById('timer-display').innerText = "00:00:00";
+}
+
+async function deleteEntry(id) {
+    if(confirm("Delete entry?")) {
+        entries = entries.filter(e => e.id !== id);
+        renderTable();
+        await saveData();
+    }
+}
+
+function renderTable() {
+    const tbody = document.getElementById('log-body');
+    const totalEl = document.getElementById('total-hours');
+    const filter = document.getElementById('project').value; // Get Current Dropdown Selection
+    
+    tbody.innerHTML = '';
+    let total = 0;
+
+    // FILTER LOGIC
+    const visibleEntries = filter === "ALL" 
+        ? entries 
+        : entries.filter(e => e.project === filter);
+
+    visibleEntries.forEach(entry => {
+        total += entry.hours;
+        const row = `<tr><td>${entry.date}</td><td>${entry.project}</td><td>${entry.hours.toFixed(2)}</td><td>${entry.notes}</td><td><button class="btn-del" onclick="deleteEntry(${entry.id})">x</button></td></tr>`;
+        tbody.innerHTML += row;
+    });
+
+    totalEl.innerText = total.toFixed(2);
+}
+
+// --- TIMER Logic (Unchanged) ---
 function toggleTimer() {
     const btn = document.getElementById('btn-timer');
     const display = document.getElementById('timer-display');
@@ -166,12 +260,10 @@ function toggleTimer() {
         document.getElementById('hours').value = finalHours;
     }
 }
-
 function formatTime(ms) {
     const s = Math.floor(ms / 1000);
     return new Date(s * 1000).toISOString().substr(11, 8);
 }
-
 function toggleConfig() { document.getElementById('config-panel').classList.toggle('hidden'); }
 function saveConfig() {
     const token = document.getElementById('gh-token').value;
@@ -182,45 +274,4 @@ function saveConfig() {
         toggleConfig();
         fetchData();
     }
-}
-
-async function addEntry() {
-    const date = document.getElementById('date').value;
-    const project = document.getElementById('project').value; // Now gets value from Select
-    const hours = parseFloat(document.getElementById('hours').value);
-    const notes = document.getElementById('notes').value;
-
-    if (!date || !hours) return;
-    
-    await fetchData(); 
-    const entry = { id: Date.now(), date, project, hours, notes };
-    entries.unshift(entry);
-    renderTable();
-    await saveData();
-    
-    document.getElementById('hours').value = '';
-    document.getElementById('notes').value = '';
-    document.getElementById('timer-display').innerText = "00:00:00";
-}
-
-async function deleteEntry(id) {
-    if(confirm("Delete entry?")) {
-        await fetchData();
-        entries = entries.filter(e => e.id !== id);
-        renderTable();
-        await saveData();
-    }
-}
-
-function renderTable() {
-    const tbody = document.getElementById('log-body');
-    const totalEl = document.getElementById('total-hours');
-    tbody.innerHTML = '';
-    let total = 0;
-    entries.forEach(entry => {
-        total += entry.hours;
-        const row = `<tr><td>${entry.date}</td><td>${entry.project}</td><td>${entry.hours.toFixed(2)}</td><td>${entry.notes}</td><td><button class="btn-del" onclick="deleteEntry(${entry.id})">x</button></td></tr>`;
-        tbody.innerHTML += row;
-    });
-    totalEl.innerText = total.toFixed(2);
 }
