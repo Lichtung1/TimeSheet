@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gist Time Sheet</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>// SYNCED_LOG</h1>
+            <div class="stats">
+                <span>Hours: <b id="total-hours">--</b></span>
+                <button onclick="toggleConfig()" class="btn-config">Config</button>
+            </div>
+        </header>
+
+        <div id="config-panel" class="config-panel hidden">
+            <h3>// SYSTEM_ACCESS</h3>
+            <input type="password" id="gh-token" placeholder="GitHub Token (ghp_...)" class="full-width">
+            <input type="text" id="gh-gist-id" placeholder="Gist ID" class="full-width">
+            <button onclick="saveConfig()" class="btn-save">Save & Connect</button>
+            <p class="small">Token is stored locally in your browser.</p>
+        </div>
+
+        <div class="input-group">
+            <input type="date" id="date" required>
+            <input type="text" id="project" placeholder="Job / Project" value="Main Job">
+            <input type="number" id="hours" placeholder="Hrs" step="0.25" min="0">
+            <input type="text" id="notes" placeholder="Task Description">
+            <button onclick="addEntry()" class="btn-add">PUSH DATA</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Project</th>
+                    <th>Hours</th>
+                    <th>Notes</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="log-body">
+                <tr><td colspan="5" style="text-align:center">Connecting to Gist...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
