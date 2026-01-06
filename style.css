@@ -1,13 +1,10 @@
 :root {
-    --bg: #0d0d0d;        /* Deepest Black */
-    --panel: #161618;     /* Dark Grey Panel */
-    --text: #e0e0e0;      /* Light Text */
-    
-    /* THE PALETTE */
-    --green: #00ff41;     /* Matrix Green (Numbers/Timer) */
-    --purple: #bd93f9;    /* Linux/Dracula Purple (Headers/Borders) */
+    --bg: #0d0d0d;
+    --panel: #161618;
+    --text: #e0e0e0;
+    --green: #00ff41;     
+    --purple: #bd93f9;    
     --purple-glow: rgba(189, 147, 249, 0.15);
-    
     --danger: #ff5555;
     --font: 'Consolas', 'Monaco', 'Courier New', monospace;
 }
@@ -20,7 +17,6 @@ body {
     padding: 20px;
     display: flex;
     justify-content: center;
-    /* Optional: Subtle scanline effect */
     background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
     background-size: 100% 2px, 3px 100%;
 }
@@ -30,12 +26,11 @@ body {
     max-width: 800px;
 }
 
-/* --- HEADER --- */
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--purple); /* PURPLE BORDER */
+    border-bottom: 2px solid var(--purple);
     padding-bottom: 15px;
     margin-bottom: 25px;
 }
@@ -43,14 +38,13 @@ header {
 h1 { 
     margin: 0; 
     font-size: 1.5rem; 
-    color: var(--purple); /* PURPLE HEADER */
+    color: var(--purple);
     letter-spacing: -1px; 
     text-shadow: 0 0 10px var(--purple-glow);
 }
 
-/* --- CONTROLS --- */
 .header-controls button {
-    margin-left: 15px;
+    margin-left: 10px;
     font-size: 0.8rem;
 }
 
@@ -60,6 +54,7 @@ h1 {
     color: #888; 
     padding: 5px 10px;
     transition: 0.3s;
+    cursor: pointer;
 }
 .btn-text:hover { 
     color: var(--purple); 
@@ -67,10 +62,9 @@ h1 {
     box-shadow: 0 0 8px var(--purple-glow);
 }
 
-/* --- TIMER SECTION --- */
 .timer-section {
     background: #000;
-    border: 1px solid var(--green); /* Keep Timer Green for contrast */
+    border: 1px solid var(--green);
     padding: 20px;
     text-align: center;
     margin-bottom: 25px;
@@ -100,11 +94,10 @@ h1 {
 .btn-timer.active { border-color: var(--danger); color: var(--danger); }
 .btn-timer.active:hover { background: var(--danger); color: #000; box-shadow: 0 0 15px var(--danger); }
 
-/* --- INPUT CARD --- */
 .entry-card {
     background: var(--panel);
     padding: 25px;
-    border-left: 4px solid var(--purple); /* PURPLE ACCENT BAR */
+    border-left: 4px solid var(--purple);
     border-radius: 0 4px 4px 0;
     margin-bottom: 25px;
 }
@@ -132,16 +125,15 @@ h1 {
     box-shadow: 0 0 8px var(--purple-glow);
 }
 
-/* CUSTOM DROPDOWN ARROW (Recolored to Purple) */
 select.terminal-input {
     appearance: none;
     background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23bd93f9%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
     background-repeat: no-repeat;
     background-position: right 12px top 50%;
     background-size: 10px auto;
+    cursor: pointer;
 }
 
-/* --- BUTTONS --- */
 .btn-primary {
     background: var(--purple);
     color: #111;
@@ -151,34 +143,26 @@ select.terminal-input {
     font-size: 0.9rem;
     text-transform: uppercase;
     transition: 0.2s;
+    cursor: pointer;
 }
 .btn-primary:hover { 
     background: #d6acff; 
     box-shadow: 0 0 15px var(--purple-glow);
-    cursor: pointer;
 }
 
-/* --- TABLE --- */
 .table-wrapper { margin-top: 20px; }
 table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 th { text-align: left; color: #666; border-bottom: 1px solid #333; padding: 12px; font-size: 0.8rem; }
 td { border-bottom: 1px solid #222; padding: 12px; color: #ccc; }
-td:first-child { color: var(--purple); } /* Date is purple */
-td:nth-child(3) { color: var(--green); } /* Hours are green */
+td:first-child { color: var(--purple); } 
+td:nth-child(3) { color: var(--green); } 
 
 .loading-text { text-align: center; color: #555; padding: 20px; font-style: italic; }
 
-/* --- MODALS --- */
 .hidden { display: none; }
-.config-panel { 
-    background: #111; 
-    border: 1px dashed var(--purple); 
-    padding: 20px; 
-    margin-bottom: 20px; 
-}
+.config-panel { background: #111; border: 1px dashed var(--purple); padding: 20px; margin-bottom: 20px; }
 .config-panel h3 { color: var(--purple); margin-top: 0; }
 
-/* Project List */
 .project-list { list-style: none; padding: 0; margin: 15px 0; border-top: 1px solid #333; }
 .project-list li { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #333; }
 .project-list li:hover { background-color: #1a1a1a; color: white; }
