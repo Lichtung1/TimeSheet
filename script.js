@@ -16,7 +16,7 @@ const savedGistId = localStorage.getItem(gistKey);
 if (savedToken && savedGistId) {
     document.getElementById('gh-token').value = savedToken;
     document.getElementById('gh-gist-id').value = savedGistId;
-    fetchData(); 
+    fetchData(); // Load data on startup
 } else {
     toggleConfig();
 }
@@ -49,13 +49,12 @@ function toggleTimer() {
         const elapsed = Date.now() - startTime;
         const hoursDecimal = (elapsed / 3600000); // ms to hours
         
-        // Populate Input (Round to 2 decimals)
-        // If hours is tiny (like testing), ensure it shows something
+        // Populate Input (ensure at least 0.01 if extremely short test)
         let finalHours = hoursDecimal.toFixed(2);
         if (finalHours === "0.00" && elapsed > 0) finalHours = "0.01";
         
         document.getElementById('hours').value = finalHours;
-        document.getElementById('notes').focus(); // Jump cursor to notes
+        document.getElementById('notes').focus(); 
     }
 }
 
@@ -67,7 +66,7 @@ function formatTime(ms) {
     return `${h}:${m}:${s}`;
 }
 
-// --- GIST SYNC LOGIC (Same as before) ---
+// --- GIST SYNC LOGIC ---
 
 function toggleConfig() {
     document.getElementById('config-panel').classList.toggle('hidden');
@@ -84,6 +83,7 @@ function saveConfig() {
     }
 }
 
+// 1. GET (Read from GitHub)
 async function fetchData() {
     const token = localStorage.getItem(tokenKey);
     const gistId = localStorage.getItem(gistKey);
@@ -94,8 +94,9 @@ async function fetchData() {
             headers: { 'Authorization': `token ${token}` }
         });
         const data = await res.json();
-        const content = data.files['data.json'].content;
-        entries = JSON.parse(content);
+        // If file is empty or new, default to []
+        const content = data.files['data.json'] ? data.files['data.json'].content : "[]";
+        entries = JSON.parse(content || "[]");
         renderTable();
     } catch (err) {
         console.error(err);
@@ -103,13 +104,13 @@ async function fetchData() {
     }
 }
 
+// 2. PUT (Write to GitHub)
 async function saveData() {
     const token = localStorage.getItem(tokenKey);
     const gistId = localStorage.getItem(gistKey);
     
-    // Fetch latest first to sync
-    await fetchData(); 
-
+    // NOTE: We do NOT fetch here anymore. We trust 'entries' is correct.
+    
     const body = {
         files: { "data.json": { content: JSON.stringify(entries, null, 2) } }
     };
@@ -123,8 +124,9 @@ async function saveData() {
             },
             body: JSON.stringify(body)
         });
+        console.log("Saved to GitHub");
     } catch (err) {
-        alert("Sync error.");
+        alert("Sync error. Check console.");
     }
 }
 
@@ -133,19 +135,28 @@ async function addEntry() {
     const project = document.getElementById('project').value;
     const hours = parseFloat(document.getElementById('hours').value);
     const notes = document.getElementById('notes').value;
-    const btn = document.querySelector('.btn-primary');
+    const btn = document.querySelector('.btn-primary'); // The button you clicked
 
     if (!date || !hours) return;
 
     btn.innerText = "UPLOADING...";
     
-    await fetchData(); // Sync
+    // 1. Get latest from cloud first (to avoid overwriting other computer's work)
+    await fetchData(); 
+
+    // 2. Add our new item to the fresh list
     const entry = { id: Date.now(), date, project, hours, notes };
     entries.unshift(entry);
+    
+    // 3. Show it immediately
     renderTable();
+    
+    // 4. Save the updated list
     await saveData();
 
     btn.innerText = "COMMIT_ENTRY";
+    
+    // Reset UI
     document.getElementById('hours').value = '';
     document.getElementById('notes').value = '';
     document.getElementById('timer-display').innerText = "00:00:00";
@@ -153,10 +164,10 @@ async function addEntry() {
 
 async function deleteEntry(id) {
     if(confirm("Delete entry?")) {
-        await fetchData();
-        entries = entries.filter(e => e.id !== id);
+        await fetchData(); // Sync first
+        entries = entries.filter(e => e.id !== id); // Remove item
         renderTable();
-        await saveData();
+        await saveData(); // Save changes
     }
 }
 
