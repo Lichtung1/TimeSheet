@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gist Time Sheet v2.1</title>
+    <title>Gist Time Sheet v2.2</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,6 +15,7 @@
                 <div class="status-indicator" id="status-dot"></div>
             </div>
             <div class="header-controls">
+                <button onclick="exportCSV()" class="btn-text">[ EXPORT CSV ]</button>
                 <button onclick="toggleProjects()" class="btn-text">[ PROJECTS ]</button>
                 <button onclick="toggleConfig()" class="btn-text">[ CONFIG ]</button>
             </div>
@@ -54,8 +55,8 @@
                     <input type="date" id="date" class="terminal-input">
                 </div>
                 <div class="field-group grow">
-                    <label>PROJECT</label>
-                    <select id="project" class="terminal-input">
+                    <label>PROJECT / FILTER</label>
+                    <select id="project" class="terminal-input" onchange="renderTable()">
                         </select>
                 </div>
                 <div class="field-group small">
@@ -67,7 +68,7 @@
                 <input type="text" id="notes" class="terminal-input" placeholder="> Task description...">
             </div>
             <div class="stats-bar">
-                 <span>TOTAL LOGGED: <b id="total-hours" style="color:white">0.00</b> hrs</span>
+                 <span>VISIBLE LOGGED: <b id="total-hours" style="color:white">0.00</b> hrs</span>
                  <button onclick="addEntry()" class="btn-primary" style="width: 200px">COMMIT_ENTRY</button>
             </div>
         </div>
@@ -90,6 +91,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>
