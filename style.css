@@ -1,25 +1,120 @@
-/* Keep previous CSS, just add/replace these bits */
+:root {
+    --bg: #0d0d0d;       /* Pitch black */
+    --panel: #1a1a1a;    /* Dark gray */
+    --text: #cccccc;     /* Light gray */
+    --accent: #00ff41;   /* Hacker Green */
+    --accent-dim: #008f11;
+    --danger: #ff3333;
+    --font: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
 
-.config-panel {
-    background: #2d2d2d;
-    border: 1px solid var(--accent);
-    padding: 15px;
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.main-wrapper {
+    width: 100%;
+    max-width: 800px;
+}
+
+/* Header & Typography */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #333;
+    padding-bottom: 15px;
     margin-bottom: 20px;
 }
 
-.hidden { display: none; }
+h1 { margin: 0; font-size: 1.5rem; color: var(--accent); letter-spacing: -1px; }
 
-.full-width {
-    width: 100%;
-    box-sizing: border-box; /* Fixes padding issues */
+/* Timer Section */
+.timer-section {
+    background: #000;
+    border: 1px solid var(--accent-dim);
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.05);
+}
+
+.timer-display {
+    font-size: 3rem;
+    font-weight: bold;
+    color: var(--accent);
     margin-bottom: 10px;
+    text-shadow: 0 0 5px var(--accent-dim);
 }
 
-.btn-config {
+.btn-timer {
     background: transparent;
-    border: 1px solid var(--text);
-    color: var(--text);
-    font-size: 0.8rem;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 30px;
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.small { font-size: 0.7rem; color: #888; margin: 0; }
+.btn-timer:hover { background: var(--accent); color: #000; }
+.btn-timer.active { background: var(--danger); border-color: var(--danger); color: #000; }
+
+/* Inputs */
+.entry-card {
+    background: var(--panel);
+    padding: 20px;
+    border: 1px solid #333;
+    margin-bottom: 20px;
+}
+
+.input-grid { display: flex; gap: 10px; margin-bottom: 10px; }
+.field-group { display: flex; flex-direction: column; }
+.field-group label { font-size: 0.7rem; color: #666; margin-bottom: 4px; }
+.field-group.grow { flex: 1; }
+.field-group.small { width: 80px; }
+.field-group.full { width: 100%; margin-bottom: 15px; }
+
+.terminal-input {
+    background: #000;
+    border: 1px solid #444;
+    color: white;
+    padding: 10px;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+.terminal-input:focus { outline: none; border-color: var(--accent); }
+.full-btn { width: 100%; }
+
+/* Buttons */
+button { cursor: pointer; font-family: inherit; }
+.btn-primary {
+    background: var(--accent-dim);
+    color: white;
+    border: none;
+    padding: 12px;
+    font-weight: bold;
+}
+.btn-primary:hover { background: var(--accent); color: black; }
+.btn-text { background: none; border: none; color: #666; text-decoration: underline; }
+.btn-text:hover { color: var(--accent); }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th { text-align: left; color: #666; border-bottom: 1px solid #333; padding: 10px; }
+td { border-bottom: 1px solid #222; padding: 10px; }
+.loading-text { text-align: center; color: #666; padding: 20px; font-style: italic; }
+
+/* Utils */
+.hidden { display: none; }
+.config-panel { background: #111; border: 1px dashed #444; padding: 15px; margin-bottom: 20px; }
+.btn-del { background: none; border: 1px solid #444; color: #666; padding: 2px 6px; }
+.btn-del:hover { border-color: var(--danger); color: var(--danger); }
