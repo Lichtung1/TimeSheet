@@ -8,45 +8,70 @@
 </head>
 <body>
 
-    <div class="container">
+    <div class="main-wrapper">
         <header>
-            <h1>// SYNCED_LOG</h1>
-            <div class="stats">
-                <span>Hours: <b id="total-hours">--</b></span>
-                <button onclick="toggleConfig()" class="btn-config">Config</button>
+            <div class="brand">
+                <h1>// TIMELOG_V2</h1>
+                <div class="status-indicator" id="status-dot"></div>
+            </div>
+            <div class="header-controls">
+                <span>TOTAL: <b id="total-hours">0.00</b> hrs</span>
+                <button onclick="toggleConfig()" class="btn-text">[ CONFIG ]</button>
             </div>
         </header>
 
         <div id="config-panel" class="config-panel hidden">
-            <h3>// SYSTEM_ACCESS</h3>
-            <input type="password" id="gh-token" placeholder="GitHub Token (ghp_...)" class="full-width">
-            <input type="text" id="gh-gist-id" placeholder="Gist ID" class="full-width">
-            <button onclick="saveConfig()" class="btn-save">Save & Connect</button>
-            <p class="small">Token is stored locally in your browser.</p>
+            <div class="panel-inner">
+                <h3>>> SYSTEM_ACCESS</h3>
+                <input type="password" id="gh-token" placeholder="GitHub Token (ghp_...)" class="terminal-input full">
+                <input type="text" id="gh-gist-id" placeholder="Gist ID" class="terminal-input full">
+                <button onclick="saveConfig()" class="btn-primary">AUTHENTICATE</button>
+                <p class="mute">Keys stored in localStorage.</p>
+            </div>
         </div>
 
-        <div class="input-group">
-            <input type="date" id="date" required>
-            <input type="text" id="project" placeholder="Job / Project" value="Main Job">
-            <input type="number" id="hours" placeholder="Hrs" step="0.25" min="0">
-            <input type="text" id="notes" placeholder="Task Description">
-            <button onclick="addEntry()" class="btn-add">PUSH DATA</button>
+        <div class="timer-section">
+            <div class="timer-display" id="timer-display">00:00:00</div>
+            <button id="btn-timer" onclick="toggleTimer()" class="btn-timer">INIT_SEQUENCE</button>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Project</th>
-                    <th>Hours</th>
-                    <th>Notes</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="log-body">
-                <tr><td colspan="5" style="text-align:center">Connecting to Gist...</td></tr>
-            </tbody>
-        </table>
+        <div class="entry-card">
+            <div class="input-grid">
+                <div class="field-group">
+                    <label>DATE</label>
+                    <input type="date" id="date" class="terminal-input">
+                </div>
+                <div class="field-group grow">
+                    <label>PROJECT</label>
+                    <input type="text" id="project" class="terminal-input" value="Main Job">
+                </div>
+                <div class="field-group small">
+                    <label>HOURS</label>
+                    <input type="number" id="hours" class="terminal-input" step="0.25">
+                </div>
+            </div>
+            <div class="field-group full">
+                <input type="text" id="notes" class="terminal-input" placeholder="> Task description...">
+            </div>
+            <button onclick="addEntry()" class="btn-primary full-btn">COMMIT_ENTRY</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>DATE</th>
+                        <th>PROJECT</th>
+                        <th>HRS</th>
+                        <th>NOTES</th>
+                        <th>DEL</th>
+                    </tr>
+                </thead>
+                <tbody id="log-body">
+                    <tr><td colspan="5" class="loading-text">... WAITING FOR UPLINK ...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script src="script.js"></script>
