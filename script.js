@@ -1,21 +1,73 @@
+// --- CONFIGURATION ---
 let entries = [];
 const tokenKey = 'gh_token';
 const gistKey = 'gh_gist_id';
 
-// Load credentials on startup
+// --- TIMER VARIABLES ---
+let timerInterval;
+let startTime;
+let isRunning = false;
+
+// --- INITIALIZATION ---
+document.getElementById('date').valueAsDate = new Date();
 const savedToken = localStorage.getItem(tokenKey);
 const savedGistId = localStorage.getItem(gistKey);
-
-document.getElementById('date').valueAsDate = new Date();
 
 if (savedToken && savedGistId) {
     document.getElementById('gh-token').value = savedToken;
     document.getElementById('gh-gist-id').value = savedGistId;
-    fetchData(); // Auto-load if creds exist
+    fetchData(); 
 } else {
-    document.getElementById('config-panel').classList.remove('hidden');
-    document.getElementById('log-body').innerHTML = '<tr><td colspan="5">Please configure GitHub keys.</td></tr>';
+    toggleConfig();
 }
+
+// --- TIMER LOGIC ---
+function toggleTimer() {
+    const btn = document.getElementById('btn-timer');
+    const display = document.getElementById('timer-display');
+
+    if (!isRunning) {
+        // START
+        isRunning = true;
+        startTime = Date.now();
+        btn.innerText = "STOP_SEQUENCE";
+        btn.classList.add('active');
+        
+        timerInterval = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            display.innerText = formatTime(elapsed);
+        }, 1000);
+
+    } else {
+        // STOP
+        isRunning = false;
+        clearInterval(timerInterval);
+        btn.innerText = "INIT_SEQUENCE";
+        btn.classList.remove('active');
+
+        // Calculate Hours
+        const elapsed = Date.now() - startTime;
+        const hoursDecimal = (elapsed / 3600000); // ms to hours
+        
+        // Populate Input (Round to 2 decimals)
+        // If hours is tiny (like testing), ensure it shows something
+        let finalHours = hoursDecimal.toFixed(2);
+        if (finalHours === "0.00" && elapsed > 0) finalHours = "0.01";
+        
+        document.getElementById('hours').value = finalHours;
+        document.getElementById('notes').focus(); // Jump cursor to notes
+    }
+}
+
+function formatTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+}
+
+// --- GIST SYNC LOGIC (Same as before) ---
 
 function toggleConfig() {
     document.getElementById('config-panel').classList.toggle('hidden');
@@ -24,19 +76,18 @@ function toggleConfig() {
 function saveConfig() {
     const token = document.getElementById('gh-token').value;
     const gistId = document.getElementById('gh-gist-id').value;
-    
     if(token && gistId) {
         localStorage.setItem(tokenKey, token);
         localStorage.setItem(gistKey, gistId);
         toggleConfig();
-        fetchData(); // Load data immediately
+        fetchData();
     }
 }
 
-// 1. GET Data from GitHub
 async function fetchData() {
     const token = localStorage.getItem(tokenKey);
     const gistId = localStorage.getItem(gistKey);
+    const tbody = document.getElementById('log-body');
 
     try {
         const res = await fetch(`https://api.github.com/gists/${gistId}`, {
@@ -48,34 +99,23 @@ async function fetchData() {
         renderTable();
     } catch (err) {
         console.error(err);
-        alert("Error fetching Gist. Check Console/Keys.");
+        tbody.innerHTML = '<tr><td colspan="5" style="color:#ff3333">CONNECTION FAILED</td></tr>';
     }
 }
 
-// 2. PUSH Data to GitHub
 async function saveData() {
     const token = localStorage.getItem(tokenKey);
     const gistId = localStorage.getItem(gistKey);
     
-    // We fetch first to ensure we don't overwrite remote changes from another PC
-    // (A primitive sync)
+    // Fetch latest first to sync
     await fetchData(); 
 
-    // Add new entry locally *after* fetching latest state is complex without
-    // passing the new entry around. simplified logic:
-    // In this specific function, we assume 'entries' is updated in memory
-    // But for safety, the addEntry function handles the flow.
-
     const body = {
-        files: {
-            "data.json": {
-                content: JSON.stringify(entries, null, 2)
-            }
-        }
+        files: { "data.json": { content: JSON.stringify(entries, null, 2) } }
     };
 
     try {
-        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+        await fetch(`https://api.github.com/gists/${gistId}`, {
             method: 'PATCH',
             headers: { 
                 'Authorization': `token ${token}`,
@@ -83,47 +123,37 @@ async function saveData() {
             },
             body: JSON.stringify(body)
         });
-        
-        if(res.ok) {
-            console.log("Synced to GitHub");
-        } else {
-            alert("Sync failed.");
-        }
     } catch (err) {
-        alert("Network error.");
+        alert("Sync error.");
     }
 }
 
-// Wrapper to Fetch -> Append -> Save
 async function addEntry() {
     const date = document.getElementById('date').value;
     const project = document.getElementById('project').value;
     const hours = parseFloat(document.getElementById('hours').value);
     const notes = document.getElementById('notes').value;
+    const btn = document.querySelector('.btn-primary');
 
     if (!date || !hours) return;
 
-    // 1. Get latest version from cloud to avoid conflicts
-    await fetchData();
-
-    // 2. Add new item
-    const entry = { id: Date.now(), date, project, hours, notes };
-    entries.unshift(entry); // Add to top
-
-    // 3. Render immediately for UI snap
-    renderTable();
+    btn.innerText = "UPLOADING...";
     
-    // 4. Save to Cloud
+    await fetchData(); // Sync
+    const entry = { id: Date.now(), date, project, hours, notes };
+    entries.unshift(entry);
+    renderTable();
     await saveData();
 
-    // Clear UI
+    btn.innerText = "COMMIT_ENTRY";
     document.getElementById('hours').value = '';
     document.getElementById('notes').value = '';
+    document.getElementById('timer-display').innerText = "00:00:00";
 }
 
 async function deleteEntry(id) {
-    if(confirm("Delete?")) {
-        await fetchData(); // Sync first
+    if(confirm("Delete entry?")) {
+        await fetchData();
         entries = entries.filter(e => e.id !== id);
         renderTable();
         await saveData();
@@ -134,7 +164,6 @@ function renderTable() {
     const tbody = document.getElementById('log-body');
     const totalEl = document.getElementById('total-hours');
     tbody.innerHTML = '';
-
     let total = 0;
 
     entries.forEach(entry => {
@@ -145,7 +174,7 @@ function renderTable() {
                 <td>${entry.project}</td>
                 <td>${entry.hours.toFixed(2)}</td>
                 <td>${entry.notes}</td>
-                <td><button class="btn-del" onclick="deleteEntry(${entry.id})">X</button></td>
+                <td><button class="btn-del" onclick="deleteEntry(${entry.id})">x</button></td>
             </tr>
         `;
         tbody.innerHTML += row;
