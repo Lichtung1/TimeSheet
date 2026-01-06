@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gist Time Sheet</title>
+    <title>Gist Time Sheet v2.1</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
                 <div class="status-indicator" id="status-dot"></div>
             </div>
             <div class="header-controls">
-                <span>TOTAL: <b id="total-hours">0.00</b> hrs</span>
+                <button onclick="toggleProjects()" class="btn-text">[ PROJECTS ]</button>
                 <button onclick="toggleConfig()" class="btn-text">[ CONFIG ]</button>
             </div>
         </header>
@@ -26,7 +26,19 @@
                 <input type="password" id="gh-token" placeholder="GitHub Token (ghp_...)" class="terminal-input full">
                 <input type="text" id="gh-gist-id" placeholder="Gist ID" class="terminal-input full">
                 <button onclick="saveConfig()" class="btn-primary">AUTHENTICATE</button>
-                <p class="mute">Keys stored in localStorage.</p>
+            </div>
+        </div>
+
+        <div id="project-panel" class="config-panel hidden">
+            <div class="panel-inner">
+                <h3>>> PROJECT_DB_EDITOR</h3>
+                <div class="input-grid">
+                    <input type="text" id="new-project-name" placeholder="New Project Name" class="terminal-input grow">
+                    <button onclick="addProject()" class="btn-primary">ADD</button>
+                </div>
+                <ul id="project-list-display" class="project-list">
+                    </ul>
+                <button onclick="toggleProjects()" class="btn-text" style="width:100%">[ CLOSE EDITOR ]</button>
             </div>
         </div>
 
@@ -43,7 +55,8 @@
                 </div>
                 <div class="field-group grow">
                     <label>PROJECT</label>
-                    <input type="text" id="project" class="terminal-input" value="Main Job">
+                    <select id="project" class="terminal-input">
+                        </select>
                 </div>
                 <div class="field-group small">
                     <label>HOURS</label>
@@ -53,7 +66,10 @@
             <div class="field-group full">
                 <input type="text" id="notes" class="terminal-input" placeholder="> Task description...">
             </div>
-            <button onclick="addEntry()" class="btn-primary full-btn">COMMIT_ENTRY</button>
+            <div class="stats-bar">
+                 <span>TOTAL LOGGED: <b id="total-hours" style="color:white">0.00</b> hrs</span>
+                 <button onclick="addEntry()" class="btn-primary" style="width: 200px">COMMIT_ENTRY</button>
+            </div>
         </div>
 
         <div class="table-wrapper">
